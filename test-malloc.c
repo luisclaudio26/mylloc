@@ -53,10 +53,9 @@ void do_alloc_free(int n, int max) {
 
   /*       - Etape 3: On libère le tout */
 
-  /*
   for (i = 0; i < n; i++) {
     if (tab[i] != NULL) myfree(tab[i]);
-  } */
+  }
 }
 
 
