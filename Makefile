@@ -5,7 +5,7 @@
 # Last file update: 11-May-2015 23:38 (eg)
 #
 CC     = gcc
-CFLAGS = -g -Wall -std=gnu99 -DMALLOC_DBG
+CFLAGS = -g -Wall -std=gnu99 -DMALLOC_DBG -lm
 EXE    = test-fake test-malloc
 
 
