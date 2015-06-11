@@ -1,6 +1,7 @@
 #include "my-malloc.h"
 #include <unistd.h>
 #include <stdio.h>
+#include <math.h>
 
 //----------------------------------------------
 //------------ DATA TYPE DEFINITION ------------
@@ -23,9 +24,9 @@ typedef struct _header Header;
 //----------------------------------------------
 //------------ DEBUGGING TOOLS -----------------
 //----------------------------------------------
+#ifdef MALLOC_DBG
 static int nb_alloc = 0, nb_dealloc = 0, nb_sbrk = 0;
 
-#ifdef MALLOC_DBG
 void printBlockList(Header* head)
 {
 	fprintf(stderr, "Free blocks: ");
@@ -72,7 +73,7 @@ void* mymalloc(size_t n)
 	// Calculate the number of blocks we need to allocate
 	// 1 block for the header and n/SIZE_BLOCK blocks for the
 	// payload
-	int nBlocks = 2 + n / SIZE_BLOCK;
+	int nBlocks = 1 + (int)ceil( (double)n/SIZE_BLOCK );
 
 	Header *cur, *prev;
 	for(prev = &freeList, cur = NEXT(&freeList); ;prev = cur, cur = cur->next)
@@ -96,18 +97,35 @@ void* mymalloc(size_t n)
 			cur->blockSize = offset;
 
 			Header *splitPoint = cur + offset;
-			splitPoint->blockSize = nBlocks;
+			splitPoint->blockSize = nBlocks-1; //nBlocks - 1 -> the block containing metadata
+			splitPoint->next = 0;
 		
 			//Debug info
 			#ifdef MALLOC_DBG
 			nb_alloc++;
-			printf("Requested: %d bytes [%d blocks]\n", n, nBlocks);
+			printf("\nRequested: %d bytes [%d blocks]\n", n, nBlocks);
+			printf("Current position: 0x%08x, offset: %d\n", cur, offset);
+			printf("New block header: 0x%08x, size: %d, returned valued: 0x%08x\n", splitPoint, SIZE(splitPoint), (splitPoint + 1));
 			printBlockList(&freeList);
 			#endif
 
-			return (void*)(splitPoint + SIZE_BLOCK);
+			return (void*)(splitPoint + 1);
 		}	
 	}
+}
+
+void* mycalloc(size_t nmemb, size_t size)
+{
+	size_t total = nmemb * size;
+	void* out = mymalloc(total);
+	bzero(out, total);
+	return out;
+}
+
+void myfree(void* ptr)
+{
+	Header* metadata = (Header*)ptr - 1; //Fait gafe à ce cast, sinon on récupère pas les infos!
+	printf("Address: 0x%08x, Next: %ld, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
 }
 
 #ifdef MALLOC_DBG
