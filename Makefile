@@ -5,14 +5,14 @@
 # Last file update: 11-May-2015 23:38 (eg)
 #
 CC     = gcc
-CFLAGS = -g -Wall -std=gnu99 -DMALLOC_DBG -lm
+CFLAGS = -g -Wall -std=gnu99 -DMALLOC_DBG
 EXE    = test-fake test-malloc
 
 
 all: $(EXE)
 
 test-malloc: my-malloc.o test-malloc.o
-	$(CC) $(CFLAGS) -o test-malloc my-malloc.o test-malloc.o
+	$(CC) $(CFLAGS) -o test-malloc my-malloc.o test-malloc.o -lm
 
 test-fake: fake-malloc.o test-malloc.o
 	$(CC) $(CFLAGS) -o test-fake fake-malloc.o test-malloc.o
