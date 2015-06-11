@@ -138,11 +138,17 @@ void myfree(void* ptr)
 			if (&metadata-(prev->blockSize)-1==&prev)
 				prev->next=cur;
 			if(&metadata+(metadata->blockSize)+1==&cur)
-				metadata->next=cur->next;
+				metadata->next=cur->next;//NEXT(&cur)?
 			break;
-			printf("eeee");
 		}
 	}
+}
+
+void *myrealloc(void *ptr, size_t size){
+	Header *new = mymalloc(size);
+	memcpy(ptr, new, size);
+	free(ptr);
+	ptr=&new;
 }
 
 #ifdef MALLOC_DBG
