@@ -126,6 +126,23 @@ void myfree(void* ptr)
 {
 	Header* metadata = (Header*)ptr - 1; //Fait gafe à ce cast, sinon on récupère pas les infos!
 	printf("Address: 0x%08x, Next: %ld, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
+	Header *cur, *prev;
+	for(prev = &freeList, cur = NEXT(&freeList); ;prev = cur, cur = cur->next)
+	{
+		if (&cur > &metadata){ //we found the block to remove, it's between cur and prev
+			//we link the new empty block
+			prev->next=metadata;
+			metadata->next=cur;
+
+			//we check if we can join the free bloc with the one before/after
+			if (&metadata-(prev->blockSize)-1==&prev)
+				prev->next=cur;
+			if(&metadata+(metadata->blockSize)+1==&cur)
+				metadata->next=cur->next;
+			break;
+			printf("eeee");
+		}
+	}
 }
 
 #ifdef MALLOC_DBG
