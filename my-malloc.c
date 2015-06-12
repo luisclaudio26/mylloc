@@ -124,7 +124,7 @@ void* mycalloc(size_t nmemb, size_t size)
 
 void myfree(void* ptr)
 {
-	Header* metadata = (Header*)ptr - 1; //Fait gafe à ce cast, sinon on récupère pas les infos!
+	Header* metadata = (Header*)ptr - 1; 
 	
 	printf("\n-------- Freeing stuff here -----------\n");
 	printf("Address: 0x%08x, Next: %p, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
@@ -188,6 +188,7 @@ void *myrealloc(void *ptr, size_t size)
 	Header* metadata = (Header*)ptr - 1;
 	
 	Header* next = nextFreeBlock(ptr);
+	//If the bloc after is free 
 	if(ptr + size + 1 == next)
 	{
 		Header* oldHeaderNextFree = nextFreeBlock(ptr);

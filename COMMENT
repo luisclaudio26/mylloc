@@ -1,0 +1,16 @@
+TD7 - Allocateur mémoire 
+
+Luís Cláudio Gouveia Rocha 
+Chloé Guglielmi
+
+Quelques explications sur le code:
+
+Pour le malloc, on commence par calculer le nombre de blocs qu'on doit allouer - cela doit être un nombre de blocs dont la taille totale soit supérieure ou égale au nombre d'octets qu'on veut plus un bloc pour l'entête.
+Après, on parcourt la liste des blocs libres en cherchant pour un bloc qui soit de taille plus grand à ce qu'on a besoin; si on en trouve, en le divise de façon que la moitié "à droite" (c'est-à-dire, la moitié qui contient les addresses plus grands) aient la taille qu'on veut et on le retourne à l'utilisateur.
+Remarquez que pour le cas où on trouve pas un bloc libres, on parcourir tout la liste jusqu'au moment ou on revient à la tête: dans ce cas, on appelle la primitive SBRK pour demander plus de mémoire au système d'exploitation et le nouveau space alloué est placé dans la liste de blocs libres. Dans la prochaine itération de la boucle qui cherchent un bloc libre, on va trouver le nouveau bloc alloué.
+C'est important de remarquer aussi qu'on retourne pas le pointeurs vers l'entête du nouveau bloc, mais si du bloc après celui là [ return (void*)(splitPoint+1) ]: cela est fait car l'utilisateur doit écrire dans le bloc, mais dans l'entête.
+
+Pour le free, on parcourt la liste des blocs libres jusqu'à ce qu'on dépasse le bloc que l'on veut liberer. Pour le liberer, on ajoute le bloc dans la liste des blocs vides. On regarde ensuite si un des bloc à coté (ou les deux) est libre pour les fusioner.
+
+Pour le realloc, on vérifie d'abord si le bloc d'après est libre et de taille suffisante pour étendre le bloc que l'on veut realloc. S'il est disponible, on agrandie le bloc en décalant le header du bloc suivant de la disance nécéssaire (telle que cette distance + la taille du bloc que l'on veut realloc soit égale à la taille qu'on veut). Ceci est un cas que nous avons eu du mal à tester, mais nous avons quand même voulu le laisser dans le rendu car cela nous évite de faire un memcpy, qui est assez couteux. 
+Si le bloc d'après n'est pas disponible, on est obligé de faire des memcpy. On commence par faire un malloc de la taille que l'on veut, on y copie les informations qu'il y avait à l'ancien malloc (memcpy) et on free l'ancien.
