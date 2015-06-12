@@ -58,6 +58,15 @@ void do_alloc_free(int n, int max) {
   }
 }
 
+void doReallocs()
+{
+    printf("--- Allocating 10 bytes:\n");
+    int size = 10;
+    void* foo = mymalloc(size);
+
+    printf("--- Try to resize it to 15 bytes via realloc:\n");
+    foo = myrealloc(foo, size*15);
+}
 
 int main(int argc, char *argv[]) {
   int n = N;
@@ -80,5 +89,9 @@ int main(int argc, char *argv[]) {
   mymalloc_infos("INITIAL");
   do_alloc_free(n, szmax);
   mymalloc_infos("END");
+
+  printf("------------------ Reallocs: ------------------\n");
+  doReallocs();
+
   return 0;
 }

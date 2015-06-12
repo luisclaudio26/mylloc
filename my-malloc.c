@@ -127,7 +127,7 @@ void myfree(void* ptr)
 	Header* metadata = (Header*)ptr - 1; //Fait gafe à ce cast, sinon on récupère pas les infos!
 	
 	printf("\n-------- Freeing stuff here -----------\n");
-	printf("Address: 0x%08x, Next: %ld, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
+	printf("Address: 0x%08x, Next: %p, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
 	
 	Header *cur, *prev;
 	
@@ -135,7 +135,7 @@ void myfree(void* ptr)
 	{
 		printf("Cur: %p , prev: %p , metadata: %p\n", cur, prev, metadata);
 
-		if (cur > metadata || (cur < prev && (cur < metadata && prev < metadata)) ) { //we found the block to remove, it's between cur and prev
+		if (cur == prev || cur > metadata || (cur < prev && (cur < metadata && prev < metadata)) ) { //we found the block to remove, it's between cur and prev
 
 			//we link the new empty block
 			prev->next=metadata;
@@ -165,11 +165,53 @@ void myfree(void* ptr)
 	printBlockList(&freeList);
 }
 
-void *myrealloc(void *ptr, size_t size){
-	Header *new = mymalloc(size);
-	memcpy(ptr, new, size);
-	free(ptr);
-	ptr=&new;
+void* nextFreeBlock(void *ptr)
+{
+	Header *cur;
+	for(cur = NEXT(&freeList); cur < NEXT(cur); cur = cur->next)
+	{
+		printf("cur: %p next: %p\n", cur, NEXT(cur));
+		if(cur > ptr) return cur;
+	}
+	return NULL;
+}
+
+Header* getPreviousBlock(Header* b)
+{
+	Header *prev = &freeList, *cur = NEXT(&freeList);
+	for( ; cur != b && cur != NEXT(cur); prev = cur, cur = cur->next);
+		return prev;
+}
+
+void *myrealloc(void *ptr, size_t size)
+{
+	Header* metadata = (Header*)ptr - 1;
+	
+	Header* next = nextFreeBlock(ptr);
+	if(ptr + size + 1 == next)
+	{
+		Header* oldHeaderNextFree = nextFreeBlock(ptr);
+
+		//Create header of new shifted block
+		Header* nextFree = (Header*)(ptr + size);
+		nextFree->blockSize = SIZE(oldHeaderNextFree) - (size - SIZE(metadata));
+		nextFree->next = oldHeaderNextFree->next;
+		getPreviousBlock(oldHeaderNextFree)->next = nextFree;
+
+		//Resize PTR
+		metadata->blockSize = size;
+
+		return ptr;
+	}
+	else {
+
+		Header *new = mymalloc(size);
+		memcpy(ptr, new, size);
+		myfree(ptr);
+		ptr=&new;
+
+		return new;
+	}
 }
 
 #ifdef MALLOC_DBG
