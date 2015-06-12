@@ -161,6 +161,7 @@ void myfree(void* ptr)
 		}
 	}
 
+	nb_dealloc++;
 	printBlockList(&freeList);
 }
 
