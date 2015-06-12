@@ -125,23 +125,43 @@ void* mycalloc(size_t nmemb, size_t size)
 void myfree(void* ptr)
 {
 	Header* metadata = (Header*)ptr - 1; //Fait gafe à ce cast, sinon on récupère pas les infos!
+	
+	printf("\n-------- Freeing stuff here -----------\n");
 	printf("Address: 0x%08x, Next: %ld, Size: %lu\n", metadata, NEXT(metadata), SIZE(metadata));
+	
 	Header *cur, *prev;
+	
 	for(prev = &freeList, cur = NEXT(&freeList); ;prev = cur, cur = cur->next)
 	{
-		if (&cur > &metadata){ //we found the block to remove, it's between cur and prev
+		printf("Cur: %p , prev: %p , metadata: %p\n", cur, prev, metadata);
+
+		if (cur > metadata || (cur < prev && (cur < metadata && prev < metadata)) ) { //we found the block to remove, it's between cur and prev
+
 			//we link the new empty block
 			prev->next=metadata;
 			metadata->next=cur;
 
 			//we check if we can join the free bloc with the one before/after
-			if (&metadata-(prev->blockSize)-1==&prev)
-				prev->next=cur;
-			if(&metadata+(metadata->blockSize)+1==&cur)
+			if(metadata+SIZE(metadata)+1 == cur)
+			{
 				metadata->next=cur->next;//NEXT(&cur)?
+				metadata->blockSize += SIZE(cur) + 1;
+
+				printf("Sticking blocks here. metadata + size(metadata) == cur\n");
+			}
+			if(metadata-SIZE(prev)-1 == prev)
+			{
+				prev->next=cur;
+				prev->blockSize += SIZE(metadata) + 1;
+
+				printf("Sticking blocks here. metadata - SIZE(prev) -1 == prev\n");
+			}
+
 			break;
 		}
 	}
+
+	printBlockList(&freeList);
 }
 
 void *myrealloc(void *ptr, size_t size){
